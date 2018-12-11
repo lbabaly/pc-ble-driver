@@ -889,7 +889,7 @@ void AdapterWrapper::setupScratchpad(const uint16_t mtu)
     scratchpad.ble_enable_params.gap_enable_params.central_conn_count  = MaxCentralConnections;
     scratchpad.ble_enable_params.gap_enable_params.central_sec_count   = MaxCentralSecureConnections;
     scratchpad.ble_enable_params.common_enable_params.p_conn_bw_counts = nullptr;
-    scratchpad.ble_enable_params.common_enable_params.vs_uuid_count    = 1;
+    scratchpad.ble_enable_params.common_enable_params.vs_uuid_count    = 10;
 
     if (m_role == Central)
     {
@@ -907,7 +907,7 @@ void AdapterWrapper::setupScratchpad(const uint16_t mtu)
 #endif
 
 #if NRF_SD_BLE_API == 3
-    scratchpad.ble_enable_params.gatt_enable_params.att_mtu = scratchpad.mtu;
+    scratchpad.ble_enable_params.gatt_enable_params.att_mtu = 247; // 247
 #endif
 
     // Connection parameters
@@ -926,7 +926,6 @@ void AdapterWrapper::setupScratchpad(const uint16_t mtu)
 
 #if NRF_SD_BLE_API >= 3 && NRF_SD_BLE_API <= 5
     scratchpad.scan_param.use_whitelist  = 0;
-    scratchpad.scan_param.adv_dir_report = 0;
     scratchpad.scan_param.adv_dir_report = 0;
 #endif
 
