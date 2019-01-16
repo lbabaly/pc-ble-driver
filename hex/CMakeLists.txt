@@ -63,6 +63,11 @@ if (found_version VERSION_LESS "2.19.0")
     message(FATAL_ERROR "git version ${found_version} found, version ${GIT_REQUIRED_VERSION} or higher required.")
 endif()
 
+include(ProcessorCount)
+ProcessorCount(CPU_COUNT)
+
+message(STATUS "Found ${CPU_COUNT} processors/cores")
+
 function(nrf_get_hex_paths SDK_ROOT SDK_VERSION PROJECT_PATH APP_HEX_PATH SOFTDEVICE_HEX_PATH)
     set(PROJECT_NAME)
     set(PCA_TYPE)
@@ -228,7 +233,7 @@ function(nrf_create_connectivity_compile_targets)
                         # Compile project
                         add_custom_command(
                             OUTPUT "${COMMAND_NAME}"
-                            APPEND COMMAND ${CMAKE_COMMAND} -E env CFLAGS=${VERSION_CFLAGS} ${MAKE}
+                            APPEND COMMAND ${CMAKE_COMMAND} -E env CFLAGS=${VERSION_CFLAGS} MAKEFLAGS="-j ${CPU_COUNT}" ${MAKE}
                         )
 
                         set(HEX_MERGED "${TARGET_NAME}.hex")
