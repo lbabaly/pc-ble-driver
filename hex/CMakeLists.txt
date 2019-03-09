@@ -21,10 +21,14 @@ if(NOT DEFINED CONNECTIVITY_VERSION)
     message(FATAL_ERROR "CONNECTIVITY_VERSION not provided, terminating compilation.")
 endif()
 
-if(NOT DEFINED ENV{GCCARMEMB_TOOLCHAIN_PATH})
-    message(FATAL_ERROR "GNU Tools ARM Embedded environment variable GCCARMEMB_TOOLCHAIN_PATH not set. Stopping build.")
+if(NOT DEFINED ENV{GCCARMEMB_TOOLCHAIN_PATH} AND NOT DEFINED GCCARMEMB_TOOLCHAIN_PATH)
+    message(FATAL_ERROR "GNU Tools ARM Embedded environment variable or cmake define GCCARMEMB_TOOLCHAIN_PATH not set. Stopping build.")
 else()
-    set(GCC_TOOLCHAIN_PATH "$ENV{GCCARMEMB_TOOLCHAIN_PATH}")
+    if(DEFINED GCCARMEMB_TOOLCHAIN_PATH)
+        set(GCC_TOOLCHAIN_PATH "${GCCARMEMB_TOOLCHAIN_PATH}")
+    else()
+        set(GCC_TOOLCHAIN_PATH "$ENV{GCCARMEMB_TOOLCHAIN_PATH}")
+    endif()
 endif()
 
 #message(STATUS "GCC_TOOLCHAIN_PATH: ${GCC_TOOLCHAIN_PATH}")
@@ -160,7 +164,6 @@ function(nrf_create_connectivity_compile_targets)
                 endif()
 
                 if(TRANSPORT STREQUAL "uart")
-                    list(APPEND TRANSPORTS "115k2")
                     list(APPEND TRANSPORTS "1m")
                 endif()
 
@@ -188,34 +191,6 @@ function(nrf_create_connectivity_compile_targets)
                         message(STATUS "Target ${TARGET_NAME} already exists.")
                     else()
                         set(COMMAND_NAME "${TARGET_NAME}_cmd")
-
-                        set(SER_CONFIG_PATH)
-                        set(MAIN_PATH)
-                        nrf_configure_sdk_affected_files(${SDK_VERSION} ${SDK_ROOT} SER_CONFIG_PATH MAIN_PATH)
-
-                        set(SER_CONFIG_IN_PATH "${SER_CONFIG_PATH}.in")
-                        if(NOT EXISTS ${SER_CONFIG_IN_PATH})
-                            message(FATAL_ERROR "ser_config.h.in not found. The SDK needs to be prepared. Please delete the build folder and try again  (${SDK_ROOT}).")
-                        endif()
-
-                        set(MAIN_IN_PATH "${MAIN_PATH}.in")
-                        if(NOT EXISTS ${MAIN_IN_PATH})
-                            message(FATAL_ERROR "main.c.in not found. The SDK needs to be prepared. Please delete the build folder and try again (${SDK_ROOT}).")
-                        endif()
-
-                        # Setup ser_config.h
-                        add_custom_command(
-                            OUTPUT "${COMMAND_NAME}"
-                            COMMAND ${CMAKE_COMMAND} -DSDK_VERSION=${SDK_VERSION} -DSER_CONFIG_IN_PATH=${SER_CONFIG_IN_PATH} -DBAUD_RATE=${TRANSPORT} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_cmd_ser_config.cmake
-                            WORKING_DIRECTORY ${ARMGCC_PROJECT_DIRECTORY}
-                        )
-
-                        # Setup main.c
-                        add_custom_command(
-                            OUTPUT "${COMMAND_NAME}"
-                            APPEND COMMAND ${CMAKE_COMMAND} -DMAIN_IN_PATH=${MAIN_IN_PATH} -DCONNECTIVITY_VERSION=${VERSION} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_cmd_main.cmake
-                        )
-
                         message(STATUS "Running make:${MAKE} in ARMGCC_PROJECT_DIRECTORY:${ARMGCC_PROJECT_DIRECTORY}")
 
                         # Add CFLAGS that specify application version, used by SDFU
@@ -228,7 +203,8 @@ function(nrf_create_connectivity_compile_targets)
                         # Compile project
                         add_custom_command(
                             OUTPUT "${COMMAND_NAME}"
-                            APPEND COMMAND ${CMAKE_COMMAND} -E env CFLAGS=${VERSION_CFLAGS} ${MAKE}
+                            COMMAND ${CMAKE_COMMAND} -E env CFLAGS=${VERSION_CFLAGS} ${MAKE}
+                            WORKING_DIRECTORY ${ARMGCC_PROJECT_DIRECTORY}
                         )
 
                         set(HEX_MERGED "${TARGET_NAME}.hex")
@@ -284,15 +260,7 @@ function(nrf_create_connectivity_compile_targets)
                             endif()
                         endif()
 
-                        # Make the last target added to list of targets a dependency to this target
-                        # We need to make sure that the targets are compiled in sequence
-                        # since the source code changes in every target (configuration of .in files)
-                        list(LENGTH CONNECTIVITY_BUILD_TARGETS CONNECTIVITY_BUILD_TARGETS_LENGTH)
-                        if(CONNECTIVITY_BUILD_TARGETS_LENGTH GREATER_EQUAL 1)
-                            list(GET CONNECTIVITY_BUILD_TARGETS -1 PREVIOUS_TARGET)
-                        endif()
-
-                        add_custom_target("compile_${TARGET_NAME}" DEPENDS ${COMMAND_NAME} ${PREVIOUS_TARGET})
+                        add_custom_target("compile_${TARGET_NAME}" DEPENDS ${COMMAND_NAME})
                         list(APPEND CONNECTIVITY_BUILD_TARGETS "compile_${TARGET_NAME}")
                     endif()
                 endforeach()
@@ -336,11 +304,4 @@ nrf_create_connectivity_compile_targets(
     VERSION "${CONNECTIVITY_VERSION}"
 )
 
-# Add a connectivity compilation target that depends on the last target added to CONNECTIVITY_BUILD_TARGETS
-# This target makes it easier for the developer to know which target to invoke to compile
-# all versions of connectivity firmware
-list(LENGTH CONNECTIVITY_BUILD_TARGETS CONNECTIVITY_BUILD_TARGETS_LENGTH)
-if(CONNECTIVITY_BUILD_TARGETS_LENGTH GREATER_EQUAL 1)
-    list(GET CONNECTIVITY_BUILD_TARGETS -1 PREVIOUS_TARGET)
-    add_custom_target("compile_connectivity" DEPENDS ${PREVIOUS_TARGET})
-endif()
+add_custom_target("compile_connectivity" DEPENDS ${CONNECTIVITY_BUILD_TARGETS})

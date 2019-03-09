@@ -62,11 +62,11 @@ To use pc-ble-driver, your Development Kit needs to have the correct firmware. T
 
 The generated libraries are compatible with the following SoftDevice API versions and nRF5x ICs:
 
-* SoftDevice s130 API version 2: `connectivity_<version>_<115k2|1m>_with_s130_2.x.x` (nRF51 and nRF52 series ICs)
-* SoftDevice s132 API version 3: `connectivity_<version>_<115k2|1m|*usb>_with_s132_3.x.x` (only for nRF52 series ICs)
-* SoftDevice s132 API version 5: `connectivity_<version>_<115k2|1m|*usb>_with_s132_5.x.x` (only for nRF52 series ICs)
-* SoftDevice s132 API version 6: `connectivity_<version>_<115k2|1m|*usb>_with_s132_6.x.x` (only for nRF52 series ICs)
-* SoftDevice s140 API version 6: `connectivity_<version>_<115k2|1m|*usb>_with_s140_6.x.x` (only for nRF52 series ICs)
+* SoftDevice s130 API version 2: `connectivity_<version>_1m_with_s130_2.x.x` (nRF51 and nRF52 series ICs)
+* SoftDevice s132 API version 3: `connectivity_<version>_<1m|*usb>_with_s132_3.x.x` (only for nRF52 series ICs)
+* SoftDevice s132 API version 5: `connectivity_<version>_<1m|*usb>_with_s132_5.x.x` (only for nRF52 series ICs)
+* SoftDevice s132 API version 6: `connectivity_<version>_<1m|*usb>_with_s132_6.x.x` (only for nRF52 series ICs)
+* SoftDevice s140 API version 6: `connectivity_<version>_<1m|*usb>_with_s140_6.x.x` (only for nRF52 series ICs)
 
 *usb) only for nRF52 series ICs with USBD peripheral
 
@@ -165,8 +165,8 @@ To compile `pc-ble-driver` you will need the following tools:
 ##### [Go to compile `pc-ble-driver` from source](#Compiling-pc-ble-driver-from-source)
 
 To compile `connectivity` HEX files you will need additional tools:
-* [Chocolatey](https://chocolatey.org/) (for installing GNU Make on Windows)
-* [GNU Make](https://www.gnu.org/software/make/)
+* [Chocolatey](https://chocolatey.org/)
+* [Ninja](https://ninja-build.org/)
 * [GNU Embedded Toolchain for Arm](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm)
 * [Python](https://www.python.org/)
 * [pip](https://pypi.org/project/pip/)
@@ -197,7 +197,7 @@ Follow the steps to install dependencies on a specific platform:
     $ choco install -y git
     ```
 
-3. Install `Cmake`.
+3. Install `CMake`.
     ```bash
     $ choco install -y cmake
     ```
@@ -213,21 +213,22 @@ Follow the steps to install dependencies on a specific platform:
 
 The following steps are needed only if you want to compile your own `connectivity` HEX files.
 
-1. Install `make`.
+1. Install `ninja`.
     ```bash
-    $ choco install -y make
+    $ choco install -y ninja
     ```
 
-2. Install `GNU Embedded Toolchain for Arm`
-    ```bash
-    $ choco install -y gcc-arm-embedded
-    ```
+2. Download and install `GNU Embedded Toolchain for Arm` version 7-2018q2
+
+    Download from [this](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) location.
+
+    Follow the install instructions.
 
     Set its installation path as `GCCARMEMB_TOOLCHAIN_PATH` in environment variables.
-    By default:
+    For example:
 
     ```bash
-    $ SET GCCARMEMB_TOOLCHAIN_PATH=C:\ProgramData\chocolatey\lib\gcc-arm-embedded\tools
+    $ set GCCARMEMB_TOOLCHAIN_PATH=c:\gccarmemb
     ```
 
 3. Install `Python` and `pip`, and then install `nrfutil`
@@ -257,12 +258,12 @@ The following steps are needed only if you want to compile your own `connectivit
     $ sudo apt install git
     ```
 
-3. Install `Cmake`.
+3. Install `CMake`.
     ```bash
     $ sudo apt-get -y install cmake
     ```
 
-    Install `Cmake` from source if the version is lower than required.
+    Install `CMake` from source if the version is lower than required.
 
 4. Install [vcpkg](https://github.com/Microsoft/vcpkg).
     ```bash
@@ -275,7 +276,7 @@ The following steps are needed only if you want to compile your own `connectivit
 
 The following steps are needed only if you want to compile your own `connectivity` HEX files.
 
-1. Install `GNU Embedded Toolchain for Arm`.
+1. Install `GNU Embedded Toolchain for Arm` version 7-2018q2.
     * Download from [here](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
     * Extract
     * Set its location as `GCCARMEMB_TOOLCHAIN_PATH` in environment variables.
@@ -315,7 +316,7 @@ The following steps are needed only if you want to compile your own `connectivit
 
  The following steps are needed only if you want to compile your own `connectivity` HEX files.
 
-1. Install `GNU Embedded Toolchain for Arm`
+1. Install `GNU Embedded Toolchain for Arm` version 7-2018q2.
     * Download from [here](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
     * Extract
     * Set its location as `GCCARMEMB_TOOLCHAIN_PATH` in environment variables.
@@ -347,30 +348,22 @@ The following steps are needed only if you want to compile your own `connectivit
     ```
 
 2. CMake
+    Select the Visual Studio compiler to use according to this article: [Build C/C++ code on the command line](https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line?view=vs-2015)
 
-    To build 32-bit version with Visual Studio 2015:
     ```bash
-    $ cmake -G "Visual Studio 14" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake ..
+    $ cmake -G Ninja ..
     ```
 
-    To build 64-bit version with Visual Studio 2015:
+3. Compile
 
     ```bash
-    $ cmake -G "Visual Studio 14 Win64" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake ..
+    $ cmake --build .
     ```
 
-    Change `-G "Visual Studio 14"` to `-G "Visual Studio 15"` if you are using Visual Studio 2017.
-
-3. MSBuild
+    Optionally select the build configuration with the `--config` option. Typically `Debug`, `Release`, `MinSizeRel` and `RelWithDebInfo` are available. For example:
 
     ```bash
-    $ msbuild ALL_BUILD.vcxproj
-    ```
-
-    Optionally select the build configuration with the `/p:Configuration=` option. Typically `Debug`, `Release`, `MinSizeRel` and `RelWithDebInfo` are available. For example:
-
-    ```bash
-    $ msbuild ALL_BUILD.vcxproj /p:Configuration=Debug
+    $ cmake --build . --config Debug
     ```
 
 #### Compiling pc-ble-driver on Ubuntu Linux or macOS
@@ -390,8 +383,7 @@ The following steps are needed only if you want to compile your own `connectivit
 
     ```bash
     $ cmake \
-        -G "Unix Makefiles" \
-        -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+        -G Ninja \
         ..
     ```
 
@@ -402,16 +394,15 @@ The following steps are needed only if you want to compile your own `connectivit
 
     ```bash
     $ cmake \
-        -G "Unix Makefiles" \
-        -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+        -G Ninja \
         -DCMAKE_BUILD_TYPE=Debug \
         -DARCH=x86_32,x86_64 \
         ..
     ```
 
-3. Make
+3. Compile
     ```bash
-    $ make
+    $ cmake --build .
     ```
 
 ---
@@ -445,11 +436,10 @@ Follow the steps to install dependencies on a specific platform:
 
 2. CMake
     ```bash
-    $ cd hex
     $ mkdir build && cd build
 
     # Modify -DCONNECTIVITY_VERSION=a.b.c
-    $ cmake -G "Visual Studio 14" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake -DCOMPILE_CONNECTIVITY=1 -DCONNECTIVITY_VERSION=1.0.0 ..
+    $ cmake -G "Visual Studio 14" -DCOMPILE_CONNECTIVITY=1 -DCONNECTIVITY_VERSION=1.0.0 ..
     ```
 
     `COMPILE_CONNECTIVITY` is set to 1 to enable compiling connectivity firmware.
@@ -458,9 +448,9 @@ Follow the steps to install dependencies on a specific platform:
 
     Check more options at [compiling pc-ble-driver on Windows](#Compiling-pc-ble-driver-on-Windows)
 
-3. MSBuild
+3. Compile
     ```bash
-    $ msbuild compile_connectivity.vcxproj
+    $ cmake --build . --target compile_connectivity
     ```
 
     The HEX files are available in the `hex/sd_api_v<x>` folder after compilation. They include the SoftDevice and the connectivity application.
@@ -483,8 +473,7 @@ Follow the steps to install dependencies on a specific platform:
 
     # Modify -DCONNECTIVITY_VERSION=a.b.c
     $ cmake \
-        -G "Unix Makefiles" \
-        -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+        -G Ninja \
         -DCOMPILE_CONNECTIVITY=1 \
         -DCONNECTIVITY_VERSION=1.0.0 \
         ..
@@ -496,9 +485,9 @@ Follow the steps to install dependencies on a specific platform:
 
     Check more options at [compiling pc-ble-driver on Ubuntu Linux or macOS](#Compiling-pc-ble-driver-on-Ubuntu-Linux-or-macOS)
 
-3. Make
+3. Compile
     ```bash
-    $ make compile_connectivity
+    $ cmake --build . --target compile_connectivity
     ```
 
     The HEX files are available in the `hex/sd_api_v<x>` folder after compilation. They include the SoftDevice and the connectivity application.

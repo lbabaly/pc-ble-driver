@@ -74,7 +74,7 @@ const uint8_t PACKET_RETRANSMISSIONS =
 // Other constants
 
 // Duration to wait for state ACTIVE after open is called
-const auto OPEN_WAIT_TIMEOUT = std::chrono::milliseconds(2000);
+const auto OPEN_WAIT_TIMEOUT = std::chrono::milliseconds(3000);
 // Duration to wait before continuing UART communication after reset is sent to target
 const auto RESET_WAIT_DURATION = std::chrono::milliseconds(300);
 
@@ -1151,7 +1151,7 @@ void H5Transport::logPacket(const bool outgoing, const payload_t &packet)
 void H5Transport::logStateTransition(h5_state_t from, h5_state_t to) const
 {
     std::stringstream logLine;
-    logLine << "State change: " << stateToString(from) << " -> " << stateToString(to) << std::endl;
+    logLine << "State change: " << stateToString(from) << " -> " << stateToString(to);
 
     log(SD_RPC_LOG_DEBUG, logLine.str());
 }
